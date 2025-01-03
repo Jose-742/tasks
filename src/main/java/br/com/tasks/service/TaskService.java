@@ -1,19 +1,23 @@
 package br.com.tasks.service;
 
 import br.com.tasks.model.Task;
+import br.com.tasks.repository.TaskCustomRepository;
 import br.com.tasks.repository.TaskRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 
 @Service
 public class TaskService {
 
     private final TaskRepository taskRepository;
 
-    public TaskService(TaskRepository taskRepository) {
+    private final TaskCustomRepository taskCustomRepository;
+
+    public TaskService(TaskRepository taskRepository, TaskCustomRepository taskCustomRepository) {
         this.taskRepository = taskRepository;
+        this.taskCustomRepository = taskCustomRepository;
     }
 
     public Mono<Task> insert(Task task) {
@@ -22,8 +26,8 @@ public class TaskService {
               .flatMap(this::save);
     }
 
-    public Mono<List<Task>> list() {
-        return Mono.just(taskRepository.findAll());
+    public Page<Task> findPaginated(Task task, Integer page, Integer size) {
+        return taskCustomRepository.findPaginated(task, page, size);
     }
 
     private Mono<Task> save(Task task) {
