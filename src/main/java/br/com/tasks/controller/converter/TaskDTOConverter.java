@@ -42,7 +42,7 @@ public class TaskDTOConverter {
     public Task convert(String id, String title, String description, int priority, TaskState state) {
         return Task.builder()
                 .withId(id)
-                .withId(title)
+                .withTitle(title)
                 .withDescription(description)
                 .withPriority(priority)
                 .withState(state)
