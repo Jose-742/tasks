@@ -1,7 +1,9 @@
 package br.com.tasks.controller;
 
 import br.com.tasks.controller.converter.TaskDTOConverter;
+import br.com.tasks.controller.converter.TaskInsertDTOConverter;
 import br.com.tasks.controller.dto.TaskDTO;
+import br.com.tasks.controller.dto.TaskInsertDTO;
 import br.com.tasks.model.Task;
 import br.com.tasks.service.TaskService;
 import org.junit.jupiter.api.Test;
@@ -31,6 +33,9 @@ public class TaskControllerTest {
     @Mock
     private TaskDTOConverter converter;
 
+    @Mock
+    private TaskInsertDTOConverter insertDTOConverter;
+
     @Test
     public void controller_mustReturnOk_whenSaveSuccessfully(){
         when(service.insert(any())).thenReturn(Mono.just(new Task()));
@@ -40,7 +45,7 @@ public class TaskControllerTest {
 
         client.post()
                 .uri("/task")
-                .bodyValue(new TaskDTO())
+                .bodyValue(new TaskInsertDTO())
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(TaskDTO.class);
