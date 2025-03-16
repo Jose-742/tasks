@@ -1,5 +1,6 @@
 package br.com.tasks.service;
 
+import br.com.tasks.exception.TaskNotFoundException;
 import br.com.tasks.model.Task;
 import br.com.tasks.repository.TaskCustomRepository;
 import br.com.tasks.repository.TaskRepository;
@@ -34,13 +35,21 @@ public class TaskService {
         return taskCustomRepository.findPaginated(task, page, size);
     }
 
-    private Mono<Task> save(Task task) {
-        return Mono.just(task)
-                .doOnNext(t -> LOGGER.info("Saving task with title {}", t.getTitle()))
-                .flatMap(taskRepository::save);
+    public Mono<Task> update(Task task) {
+        return taskRepository.findById(task.getId())
+                .map(task::update)
+                .flatMap(taskRepository::save)
+                .switchIfEmpty(Mono.error(TaskNotFoundException::new))
+                .doOnError(error -> LOGGER.error("Error during update task with id: {}, Message: {}", task.getId(), error.getMessage()));
     }
 
     public Mono<Void> deleteById(String id) {
         return taskRepository.deleteById(id);
+    }
+
+    private Mono<Task> save(Task task) {
+        return Mono.just(task)
+                .doOnNext(t -> LOGGER.info("Saving task with title {}", t.getTitle()))
+                .flatMap(taskRepository::save);
     }
 }

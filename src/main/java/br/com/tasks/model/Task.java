@@ -28,6 +28,12 @@ public class Task {
                 .build();
     }
 
+    public Task update(Task oldTask){
+        return builderFrom(this)
+                .withState(oldTask.getState())
+                .build();
+    }
+
     public String getId() {
         return id;
     }
