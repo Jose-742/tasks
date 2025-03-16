@@ -53,7 +53,7 @@ public class TaskControllerTest {
 
     @Test
     public void controller_mustReturnOK_whenGetPaginatedSuccessfully(){
-        when(service.findPaginated(any(), anyInt(), anyInt())).thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
+        when(service.findPaginated(any(), anyInt(), anyInt())).thenReturn(Mono.just(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0)));
 
         WebTestClient client = WebTestClient.bindToController(controller).build();
 
