@@ -1,9 +1,11 @@
 package br.com.tasks.service;
 
 import br.com.tasks.exception.TaskNotFoundException;
+import br.com.tasks.model.Address;
 import br.com.tasks.model.Task;
 import br.com.tasks.repository.TaskCustomRepository;
 import br.com.tasks.repository.TaskRepository;
+import ch.qos.logback.classic.spi.IThrowableProxy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -19,9 +21,12 @@ public class TaskService {
 
     private final TaskCustomRepository taskCustomRepository;
 
-    public TaskService(TaskRepository taskRepository, TaskCustomRepository taskCustomRepository) {
+    private final AddressService addressService;
+
+    public TaskService(TaskRepository taskRepository, TaskCustomRepository taskCustomRepository, AddressService addressService) {
         this.taskRepository = taskRepository;
         this.taskCustomRepository = taskCustomRepository;
+        this.addressService = addressService;
     }
 
     public Mono<Task> insert(Task task) {
@@ -45,6 +50,21 @@ public class TaskService {
 
     public Mono<Void> deleteById(String id) {
         return taskRepository.deleteById(id);
+    }
+
+    public Mono<Task> start(String id, String zipcode) {
+        return taskRepository.findById(id)
+                .zipWhen(it -> addressService.getAddress(zipcode))
+                .flatMap(it -> updateAddress(it.getT1(), it.getT2()))
+                .map(Task::start)
+                .flatMap(taskRepository::save)
+                .switchIfEmpty(Mono.error(TaskNotFoundException::new))
+                .doOnError(error -> LOGGER.error("Error on start task, id: {}, Message: {}", id, error.getMessage()));
+    }
+
+    private Mono<Task> updateAddress(Task task, Address address) {
+        return Mono.just(task)
+                .map(it -> task.updateAddress(address));
     }
 
     private Mono<Task> save(Task task) {

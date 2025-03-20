@@ -20,7 +20,7 @@ public class ViaCepClient {
     public Mono<Address> getAddress(String zipCode){
         return client
                 .get()
-                .uri(VIA_CEP_URI)
+                .uri(VIA_CEP_URI, zipCode)
                 .retrieve()
                 .bodyToMono(Address.class)
                 .onErrorResume(error -> Mono.error(CepNotFoundException::new));
