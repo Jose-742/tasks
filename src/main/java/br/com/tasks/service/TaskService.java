@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -72,7 +73,13 @@ public class TaskService {
                 .flatMap(taskRepository::save)
                 .flatMap(producer::sendNotification)
                 .switchIfEmpty(Mono.error(TaskNotFoundException::new))
-                .doOnError(error -> LOGGER.error("Error on start task, id: {}, Message: {}", id, error.getMessage()));
+                .doOnError(error -> LOGGER.error("Error on start task, id: {}, Message: {}", id, error.getMessage()))
+                .retryWhen(Retry
+                        .backoff(3, Duration.ofSeconds(1))
+                        .maxBackoff(Duration.ofSeconds(10))
+                        .jitter(0.5)
+                        .filter(throwable -> throwable instanceof TaskNotFoundException)
+                ); // Em caso ocorra o erro TaskNotFoundException ele tenta 3 vezes a consulta
     }
 
     public Mono<Task> done(Task task) {
