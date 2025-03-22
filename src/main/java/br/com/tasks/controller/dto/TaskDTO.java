@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_NULL) // Não inclui propriedades nullas
 public class TaskDTO {
 
     @NotBlank(message = "{blank.id}")
