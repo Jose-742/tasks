@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/task")
@@ -55,6 +57,24 @@ public class TaskController {
                 .map(converter::convert);
     }
 
+    @PostMapping("/start")
+    public Mono<TaskDTO> start(@RequestParam String id, @RequestParam String zipcode) {
+        return service.start(id, zipcode)
+                .map(converter::convert);
+    }
+
+    @PostMapping("/refresh/created")
+    public Flux<TaskDTO> refreshCreated(){
+        return service.refreshCreated()
+                .map(converter::convert);
+    }
+
+    @PostMapping("/done")
+    public Mono<List<TaskDTO>> done(@RequestBody List<String> ids) {
+        return service.doneMany(ids)
+                .map(converter::convertList);
+    }
+
     @PutMapping
     public Mono<TaskDTO> updateTask(@RequestBody @Valid TaskUpdateDTO taskUpdateDTO) {
         return service.update(updateDTOConverter.convert(taskUpdateDTO))
@@ -68,17 +88,5 @@ public class TaskController {
         return Mono.just(id)
                 .doOnNext(it -> LOGGER.info("Deleting task with id {}", id))
                 .flatMap(service::deleteById);
-    }
-
-    @PostMapping("/start")
-    public Mono<TaskDTO> start(@RequestParam String id, @RequestParam String zipcode) {
-        return service.start(id, zipcode)
-                .map(converter::convert);
-    }
-
-    @PostMapping("/refresh/created")
-    public Flux<TaskDTO> refreshCreated(){
-        return service.refreshCreated()
-                .map(converter::convert);
     }
 }

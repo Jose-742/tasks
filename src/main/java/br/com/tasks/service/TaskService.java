@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 
 @Service
 public class TaskService {
@@ -76,6 +78,15 @@ public class TaskService {
                 .doOnNext(it -> LOGGER.info("Finished task. ID: {}", task.getId()))
                 .map(Task::done)
                 .flatMap(taskRepository::save);
+    }
+
+    public Mono<List<Task>> doneMany(List<String> ids) {
+        return Flux.fromIterable(ids)
+                .flatMap(taskRepository::findById)
+                    .map(Task::done)
+                    .flatMap(taskRepository::save)
+                    .doOnNext(it -> LOGGER.info("Done task.. ID: {}", it.getId())
+                ).collectList();
     }
 
     public Flux<Task> refreshCreated(){
