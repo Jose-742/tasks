@@ -6,7 +6,7 @@ import br.com.tasks.model.Address;
 import br.com.tasks.model.Task;
 import br.com.tasks.repository.TaskCustomRepository;
 import br.com.tasks.repository.TaskRepository;
-import ch.qos.logback.classic.spi.IThrowableProxy;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
+import java.time.LocalDate;
 import java.util.List;
 
 
@@ -105,5 +107,23 @@ public class TaskService {
         return Mono.just(task)
                 .doOnNext(t -> LOGGER.info("Saving task with title {}", t.getTitle()))
                 .flatMap(taskRepository::save);
+    }
+
+    // ao instanciar a classe ele incia o metodo
+    // a cada um dia ele executa o Flux, se tiver tasks executando a mais de 7 dias sem finalizar ele finaliza!
+    @PostConstruct
+    private void scheduleDoneOlderTasks() {
+        Mono.delay(Duration.ofSeconds(5))
+                .doOnNext(it -> LOGGER.info("Starting task monitoring"))
+                .subscribe();
+
+        Flux.interval(Duration.ofDays(1))
+                .flatMap(it -> doneOlderTasks())
+                 .doOnNext(tasks -> LOGGER.info("{} task(s) completed after being active for over 7 days.", tasks))
+                .subscribe();
+    }
+
+    private Mono<Long> doneOlderTasks() {
+        return taskCustomRepository.updateStateToDoneForOlderTasks(LocalDate.now().minusDays(7));
     }
 }
